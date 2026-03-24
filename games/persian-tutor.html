@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Language Tutor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #000000;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #000000;
+            border: 1px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(255,255,255,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #000000;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: #ffffff;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-box {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            background: #111111;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.tutor {
+            background: #1a1a2e;
+            border-left: 4px solid #ffffff;
+        }
+
+        .message.user {
+            background: #0f3460;
+            border-left: 4px solid #ffffff;
+            margin-left: 50px;
+        }
+
+        .message-text {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .transliteration {
+            font-size: 13px;
+            color: #ffffff;
+            font-style: italic;
+            margin-bottom: 8px;
+        }
+
+        .translation {
+            font-size: 14px;
+            color: #ffffff;
+            background: #000000;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #ffffff;
+        }
+
+        .word-breakdown {
+            font-size: 12px;
+            background: #000000;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 4px;
+        }
+
+        .word-item {
+            margin: 4px 0;
+            color: #ffffff;
+        }
+
+        .word-item strong {
+            color: #ffffff;
+        }
+
+        .input-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #000000;
+            color: #ffffff;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #666;
+        }
+
+        button {
+            padding: 12px 20px;
+            background: #000000;
+            color: #ffffff;
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card {
+            background: #000000;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #ffffff;
+            transition: width 0.3s;
+        }
+
+        .feedback-item {
+            padding: 8px;
+            background: #000000;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-left: 3px solid #ffffff;
+            color: #ffffff;
+        }
+
+        .goal-item {
+            padding: 8px;
+            background: #000000;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            border-left: 3px solid #ffffff;
+            color: #ffffff;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .message.user {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Persian Language Tutor</h1>
+            <p style="color: #ffffff;">Learn Persian with translations and pronunciation</p>
+        </div>
+
+        <div class="content">
+            <div class="chat-section">
+                <div class="chat-box" id="chatBox">
+                    <div class="message tutor">
+                        <div class="message-text">سلام! من معلم پارسی هستم. خوش آمدید!</div>
+                        <div class="transliteration">Pronunciation: Salaam! Man moallem-e Farsi hastam. Khosh Amadi!</div>
+                        <div class="translation">Translation: Hello! I am a Persian teacher. Welcome!</div>
+                        <div class="word-breakdown">
+                            <strong>Word Breakdown:</strong>
+                            <div class="word-item"><strong>سلام</strong> (Salaam) = Hello</div>
+                            <div class="word-item"><strong>من</strong> (Man) = I</div>
+                            <div class="word-item"><strong>معلم</strong> (Moallem) = Teacher</div>
+                            <div class="word-item"><strong>پارسی</strong> (Farsi) = Persian</div>
+                            <div class="word-item"><strong>هستم</strong> (Hastam) = am</div>
+                            <div class="word-item"><strong>خوش آمدید</strong> (Khosh Amadi) = Welcome</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-box">
+                    <input type="text" id="userInput" placeholder="Type your message (Persian or English)..." />
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <h3>Your Level</h3>
+                    <div id="levelBadge" style="font-size: 16px; font-weight: bold; color: #ffffff;">Beginner</div>
+                    <div class="progress-bar" style="margin-top: 10px;">
+                        <div class="progress-fill" id="levelProgress" style="width: 15%;"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Feedback</h3>
+                    <div id="feedbackBox">
+                        <div class="feedback-item">Great start! Keep going!</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Your Goals</h3>
+                    <div class="goal-item">Learn greetings</div>
+                    <div class="goal-item">Master numbers 1-10</div>
+                    <div class="goal-item">Practice conversations</div>
+                </div>
+
+                <div class="card">
+                    <h3>Progress</h3>
+                    <div>
+                        <div style="font-size: 12px; margin-bottom: 5px; color: #ffffff;">Vocabulary</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="vocabProgress" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <div style="font-size: 12px; margin-bottom: 5px; color: #ffffff;">Grammar</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="grammarProgress" style="width: 15%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let messageCount = 0;
+        let vocabulary = 20;
+        let grammar = 15;
+
+        // Pre-made responses
+        const responses = {
+            'سلام': {
+                persian: 'سلام! چطور می تونم کمکت کنم؟',
+                transliteration: 'Salaam! Chetor mitoonam komakket konam?',
+                translation: 'Hello! How can I help you?',
+                words: ['سلام = Hello', 'چطور = How', 'می تونم = can I', 'کمک = help']
+            },
+            'hello': {
+                persian: 'سلام! خوش آمدید!',
+                transliteration: 'Salaam! Khosh Amadi!',
+                translation: 'Hello! Welcome!',
+                words: ['سلام = Hello', 'خوش = good/pleasant', 'آمدید = you came']
+            },
+            'how are you': {
+                persian: 'من خیلی خوب هستم، ممنون!',
+                transliteration: 'Man kheli khob hastam, mamnoon!',
+                translation: 'I am very well, thank you!',
+                words: ['خیلی = very', 'خوب = good', 'ممنون = thank you', 'هستم = am']
+            },
+            'چطور': {
+                persian: 'من خیلی خوب هستم!',
+                transliteration: 'Man kheli khob hastam!',
+                translation: 'I am very well!',
+                words: ['خیلی = very', 'خوب = good', 'هستم = am', 'من = I']
+            },
+            'default': {
+                persian: 'خیلی خوب! شما خوب یاد می گیرید!',
+                transliteration: 'Kheli khob! Shoma khob yad migiran!',
+                translation: 'Very good! You are learning well!',
+                words: ['خیلی = very', 'خوب = good', 'یاد می گیری = learning', 'شما = you']
+            }
+        };
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+
+            messageCount++;
+
+            // Update progress
+            vocabulary = Math.min(100, vocabulary + Math.random() * 10);
+            grammar = Math.min(100, grammar + Math.random() * 8);
+            document.getElementById('vocabProgress').style.width = Math.round(vocabulary) + '%';
+            document.getElementById('grammarProgress').style.width = Math.round(grammar) + '%';
+
+            // Update level
+            if (messageCount > 5) {
+                document.getElementById('levelBadge').textContent = 'Intermediate';
+                document.getElementById('levelProgress').style.width = '50%';
+            }
+            if (messageCount > 15) {
+                document.getElementById('levelBadge').textContent = 'Advanced';
+                document.getElementById('levelProgress').style.width = '85%';
+            }
+
+            // Get response
+            let response = responses['default'];
+            if (responses[message.toLowerCase()]) {
+                response = responses[message.toLowerCase()];
+            }
+
+            // Add tutor response
+            addFormattedMessage(response.persian, response.transliteration, response.translation, response.words);
+
+            // Add feedback
+            const feedbacks = [
+                'Great effort!',
+                'Good job!',
+                'Excellent!',
+                'Well done!',
+                'Keep it up!'
+            ];
+            const feedback = feedbacks[Math.floor(Math.random() * feedbacks.length)];
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.innerHTML = `<div class="feedback-item">${feedback}</div>` + feedbackBox.innerHTML;
+            if (feedbackBox.children.length > 3) feedbackBox.removeChild(feedbackBox.lastChild);
+        }
+
+        function addMessage(text, sender) {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + sender;
+            messageDiv.innerHTML = `<div class="message-text">${text}</div>`;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addFormattedMessage(persian, transliteration, translation, words) {
+            const chatBox = document.getElementById('chatBox');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message tutor';
+
+            let html = `
+                <div class="message-text">${persian}</div>
+                <div class="transliteration">Pronunciation: ${transliteration}</div>
+                <div class="translation">Translation: ${translation}</div>
+                <div class="word-breakdown"><strong>Words:</strong>`;
+
+            for (let word of words) {
+                html += `<div class="word-item">${word}</div>`;
+            }
+
+            html += '</div>';
+
+            messageDiv.innerHTML = html;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Allow Enter key
+        document.getElementById('userInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
