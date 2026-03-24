@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Builder — Learn with AJ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .animal-bounce { animation: bounce 1.5s infinite; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const MinecraftBuilder = () => {
+      const [blocks, setBlocks] = useState({});
+      const [animals, setAnimals] = useState({});
+      const [selectedBlock, setSelectedBlock] = useState('grass');
+      const [savedBuilds, setSavedBuilds] = useState([]);
+      const [showSaveDialog, setShowSaveDialog] = useState(false);
+      const [buildName, setBuildName] = useState('');
+
+      const blockTypes = {
+        grass: { color: '#4a9b3a', name: '🌱 GRASS', shadow: '#3a7b2a' },
+        dirt: { color: '#8b4513', name: '🟤 DIRT', shadow: '#6b3513' },
+        stone: { color: '#808080', name: '🗻 STONE', shadow: '#606060' },
+        wood: { color: '#deb887', name: '🪵 WOOD', shadow: '#be9867' },
+        tree: { color: '#228b22', name: '🌳 TREE', shadow: '#1a6b1a' },
+        water: { color: '#4169e1', name: '💧 WATER', shadow: '#3159d1' },
+        lava: { color: '#ff4500', name: '🔥 LAVA', shadow: '#df3500' },
+        cow: { color: '#ffffff', name: '🐄 COW', shadow: '#e0e0e0' },
+        pig: { color: '#ffc0cb', name: '🐷 PIG', shadow: '#e0a0ab' },
+        sheep: { color: '#f0f0f0', name: '🐑 SHEEP', shadow: '#d0d0d0' },
+        chicken: { color: '#ffff99', name: '🐔 CHICKEN', shadow: '#e0e079' }
+      };
+
+      const animalEmojis = { cow: '🐄', pig: '🐷', sheep: '🐑', chicken: '🐔' };
+
+      useEffect(() => {
+        const moveAnimals = () => {
+          setAnimals(prev => {
+            const newAnimals = { ...prev };
+            const animalKeys = Object.keys(newAnimals);
+            animalKeys.forEach(key => {
+              if (Math.random() < 0.3) {
+                const [x, y] = key.split(',').map(Number);
+                const directions = [[-1,0],[1,0],[0,-1],[0,1]];
+                const dir = directions[Math.floor(Math.random() * directions.length)];
+                const newX = x + dir[0];
+                const newY = y + dir[1];
+                if (newX >= 0 && newX < 16 && newY >= 0 && newY < 12 &&
+                    !blocks[`${newX},${newY}`] && !newAnimals[`${newX},${newY}`]) {
+                  const animalType = newAnimals[key];
+                  delete newAnimals[key];
+                  newAnimals[`${newX},${newY}`] = animalType;
+                }
+              }
+            });
+            return newAnimals;
+          });
+        };
+        const interval = setInterval(moveAnimals, 3000);
+        return () => clearInterval(interval);
+      }, [blocks]);
+
+      const handleClick = (x, y, isRightClick = false) => {
+        const isAnimal = ['cow','pig','sheep','chicken'].includes(selectedBlock);
+        if (isRightClick) {
+          setBlocks(prev => { const n = {...prev}; delete n[`${x},${y}`]; return n; });
+          setAnimals(prev => { const n = {...prev}; delete n[`${x},${y}`]; return n; });
+        } else {
+          if (isAnimal) {
+            if (!blocks[`${x},${y}`] && !animals[`${x},${y}`]) {
+              setAnimals(prev => ({...prev, [`${x},${y}`]: selectedBlock}));
+            }
+          } else {
+            if (!blocks[`${x},${y}`] && !animals[`${x},${y}`]) {
+              setBlocks(prev => ({...prev, [`${x},${y}`]: selectedBlock}));
+            }
+          }
+        }
+      };
+
+      const handleSave = () => {
+        if (buildName.trim()) {
+          setSavedBuilds(prev => [...prev, {
+            id: Date.now(), name: buildName.trim(),
+            blocks: {...blocks}, animals: {...animals},
+            timestamp: new Date().toLocaleDateString()
+          }]);
+          setBuildName('');
+          setShowSaveDialog(false);
+        }
+      };
+
+      const renderGrid = () => {
+        const grid = [];
+        for (let y = 0; y < 12; y++) {
+          for (let x = 0; x < 16; x++) {
+            const blockType = blocks[`${x},${y}`];
+            const animalType = animals[`${x},${y}`];
+            grid.push(
+              <div key={`${x},${y}`}
+                className="relative w-12 h-12 cursor-pointer transition-all duration-200 hover:scale-110"
+                onClick={() => handleClick(x, y)}
+                onContextMenu={(e) => { e.preventDefault(); handleClick(x, y, true); }}>
+                {blockType ? (
+                  <div className="relative w-full h-full">
+                    <div className="absolute w-full h-full border border-black/20 rounded-sm shadow-sm"
+                      style={{
+                        backgroundColor: blockTypes[blockType].color,
+                        boxShadow: `2px 2px 0px ${blockTypes[blockType].shadow}, 0 1px 3px rgba(0,0,0,0.1)`
+                      }} />
+                    <div className="absolute w-full h-1 border border-black/10 rounded-sm"
+                      style={{
+                        backgroundColor: blockTypes[blockType].color,
+                        transform: 'translateY(-1px) skewX(-20deg)',
+                        filter: 'brightness(1.2)', zIndex: 1
+                      }} />
+                    <div className="absolute w-1 h-full border border-black/10 rounded-sm"
+                      style={{
+                        backgroundColor: blockTypes[blockType].shadow,
+                        transform: 'translateX(30px) skewY(-20deg)',
+                        right: '-1px', zIndex: -1
+                      }} />
+                  </div>
+                ) : animalType ? (
+                  <div className="relative w-full h-full flex items-center justify-center">
+                    <div className="text-3xl animal-bounce"
+                      style={{ filter: 'drop-shadow(1px 1px 2px rgba(0,0,0,0.2))' }}>
+                      {animalEmojis[animalType]}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full bg-gray-900/30 border border-gray-700/30 rounded-sm hover:bg-gray-800/40 transition-colors" />
+                )}
+              </div>
+            );
+          }
+        }
+        return grid;
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white overflow-hidden">
+          <div className="bg-black/40 backdrop-blur-xl border-b border-white/10 w-full">
+            <div className="w-full px-4 py-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    Minecraft Builder
+                  </h1>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Create amazing worlds with blocks and animals</p>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button onClick={() => { setBlocks({}); setAnimals({}); }}
+                    className="px-4 py-2 bg-gray-800/80 hover:bg-gray-700/80 border border-gray-600/50 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+                    ✨ New
+                  </button>
+                  <button onClick={() => { setBlocks({}); setAnimals({}); }}
+                    className="px-4 py-2 bg-red-600/80 hover:bg-red-500/80 border border-red-500/50 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 backdrop-blur-sm text-white">
+                    🗑️ Delete All
+                  </button>
+                  <button onClick={() => setShowSaveDialog(true)}
+                    className="px-4 py-2 bg-blue-600/80 hover:bg-blue-500/80 border border-blue-500/50 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105 backdrop-blur-sm">
+                    💾 Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="max-w-full mx-auto px-2 py-4">
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4 text-center text-gray-300">Choose Your Tool</h2>
+              <div className="flex flex-wrap justify-center gap-3">
+                {Object.entries(blockTypes).map(([type, info]) => (
+                  <button key={type}
+                    className={`group relative px-4 py-3 rounded-2xl font-bold text-sm border-2 transition-all duration-200 backdrop-blur-sm ${
+                      selectedBlock === type
+                        ? 'border-white/60 scale-105 shadow-lg shadow-white/10'
+                        : 'border-white/20 hover:border-white/40'
+                    }`}
+                    style={{
+                      backgroundColor: `${info.color}CC`,
+                      color: 'white',
+                      textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                    }}
+                    onClick={() => setSelectedBlock(type)}>
+                    <div className="relative z-10">{info.name}</div>
+                    {selectedBlock === type && (
+                      <div className="absolute inset-0 bg-white/20 rounded-2xl animate-pulse" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex-1">
+                <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl">
+                  <div className="flex justify-center">
+                    <div className="grid gap-1 p-6 bg-black/60 rounded-2xl border border-white/10"
+                      style={{ gridTemplateColumns: 'repeat(16, 1fr)' }}>
+                      {renderGrid()}
+                    </div>
+                  </div>
+                  <div className="text-center mt-6 space-y-2">
+                    <p className="text-gray-300">🖱️ <span className="font-semibold">Left click</span> to place • <span className="font-semibold">Right click</span> to remove</p>
+                    <p className="text-green-400 text-sm">🐾 Animals move around every 3 seconds!</p>
+                    <p className="text-blue-400 text-sm">✨ Hover over squares to see them grow!</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:w-80">
+                <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-300">💾 Saved Builds</h3>
+                  {savedBuilds.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-4xl mb-2">🏗️</div>
+                      <p>No builds saved yet!</p>
+                      <p className="text-sm">Create something awesome and save it</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {savedBuilds.map((build) => (
+                        <div key={build.id}
+                          className="group p-4 bg-gray-800/40 hover:bg-gray-700/40 rounded-xl border border-gray-600/30 cursor-pointer transition-all duration-200"
+                          onClick={() => { setBlocks(build.blocks); setAnimals(build.animals); }}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-white">{build.name}</h4>
+                              <p className="text-sm text-gray-400">{build.timestamp}</p>
+                            </div>
+                            <div className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">📂</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {showSaveDialog && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-gray-900/95 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl max-w-md w-full mx-4">
+                <h3 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Save Your Creation
+                </h3>
+                <input type="text" value={buildName}
+                  onChange={(e) => setBuildName(e.target.value)}
+                  placeholder="Give your build a name..."
+                  className="w-full px-4 py-3 bg-black/40 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 transition-all"
+                  autoFocus />
+                <div className="flex gap-3 mt-6">
+                  <button onClick={() => setShowSaveDialog(false)}
+                    className="flex-1 px-6 py-3 bg-gray-700/60 hover:bg-gray-600/60 rounded-xl font-medium transition-all duration-200">
+                    Cancel
+                  </button>
+                  <button onClick={handleSave} disabled={!buildName.trim()}
+                    className="flex-1 px-6 py-3 bg-blue-600/80 hover:bg-blue-500/80 disabled:bg-gray-700/40 disabled:text-gray-500 rounded-xl font-medium transition-all duration-200">
+                    💾 Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<MinecraftBuilder />);
+  </script>
+</body>
+</html>
